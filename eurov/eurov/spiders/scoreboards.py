@@ -19,7 +19,7 @@ class ScoreboardsSpider(CrawlSpider):
     def parse_page(self, response):
         hxs = HtmlXPathSelector(response)
 
-        title = hxs.select('//div[@class="grid-column-block content-block is-not-tabbed cb-block cb-EventInfo cb-EventInfo-default"]/h2/text()').extract()
+        title = hxs.select('//div[@class="grid-column-block content-block is-not-tabbed cb-block cb-EventInfo cb-EventInfo-default"]/h2/text()')[0].extract()
         
         props = hxs.select("//table[@class='details']//td/text()").extract()
 
@@ -51,7 +51,13 @@ class ScoreboardsSpider(CrawlSpider):
             m = re.match("^(\d+)pt from (.+) goes to (.+)$", score_string)
             if m:
                 i = EurovItem()
-                i['title'] = title 
+                
+                evtitle_m = re.match(r'^Eurovision Song Contest (\d{4})(.*)$', title)
+                
+                i['event_title'] = title
+                i['year'] = evtitle_m.group(1)
+                i['stage'] = evtitle_m.group(2)
+                
                 i['country_from'] = m.group(2)
                 i['country_to'] = m.group(3)
                 i['score'] = m.group(1)
@@ -62,7 +68,7 @@ class ScoreboardsSpider(CrawlSpider):
                 i['event_hosts'] = props[3]
                 i['event_num_participants'] = props[4]
                 i['event_voting_method'] = props[5]
-                i['event_interval_act'] = props[6] 
+                #i['event_interval_act'] = props[6]
 
                 country_data = participants_data.get(i['country_from'])
                 if country_data:
