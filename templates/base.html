@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>Bydlovision stats</title>
+	<style>
+table {
+	border-collapse:collapse;
+}
+table, th, td {
+	border: 1px solid black;
+}		
+	</style>
+</head>
+<body>
+    <h1>Stats</h1>
+	
+	<h2>Countries</h2>
+	<ul>
+	{% for country, years in countries.iteritems() %}
+		<li><b>{{ country }}</b>:
+		{% for year in years %}<span class="year">{{ year }}</span>, {% endfor %}
+		</li>
+	{% endfor %}
+	</ul>
+    
+	<h2>Average points</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>&nbsp;</th>
+			{% for country in countries_list %}
+				<th>{{ country }}</th>
+			{% endfor %}
+			</tr>
+		</thead>
+		<tbody>
+			{% for c_from in countries_list %}
+			<tr>
+				<th>{{c_from}}</th>
+				{% for c_to in countries_list %}
+				<td>{{ average[c_from, c_to] }}</td>
+				{% endfor %}				
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</body>
+</html>
