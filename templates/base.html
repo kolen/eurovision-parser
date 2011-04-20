@@ -3,12 +3,20 @@
 <head>
     <title>Bydlovision stats</title>
 	<style>
+* {
+	font-family: sans-serif;
+	font-size: 10pt;
+}
 table {
 	border-collapse:collapse;
 }
 table, th, td {
 	border: 1px solid black;
-}		
+}
+.scorecell {
+	text-align: right;
+}
+
 	</style>
 </head>
 <body>
@@ -16,9 +24,9 @@ table, th, td {
 	
 	<h2>Countries</h2>
 	<ul>
-	{% for country, years in countries.iteritems() %}
+	{% for country, years in countries|dictsort %}
 		<li><b>{{ country }}</b>:
-		{% for year in years %}<span class="year">{{ year }}</span>, {% endfor %}
+		{% for year in years|sort %}<span class="year">{{ year }}</span>, {% endfor %}
 		</li>
 	{% endfor %}
 	</ul>
@@ -29,20 +37,35 @@ table, th, td {
 			<tr>
 				<th>&nbsp;</th>
 			{% for country in countries_list %}
-				<th>{{ country }}</th>
+				<th class="country_to">{{ country }}</th>
 			{% endfor %}
 			</tr>
 		</thead>
 		<tbody>
 			{% for c_from in countries_list %}
 			<tr>
-				<th>{{c_from}}</th>
-				{% for c_to in countries_list %}
-				<td>{{ average[c_from, c_to] }}</td>
+				<th class="country_from">{{c_from}}</th>
+				{% for c_to in countries_list %}				
+				{% if average[c_from, c_to] is defined %}
+					<td class="scorecell">
+					{{- "%0.2f" % average[c_from, c_to] -}}
+					</td>
+				{% else %}
+				    <td class="noscore">&nbsp;</td>
+				{% endif %}
 				{% endfor %}				
 			</tr>
 			{% endfor %}
 		</tbody>
 	</table>
+	
+<h2>Top loved</h2>
+<ol>
+	{% for ml in most_loved %}
+	<li>{{ ml['from'] }} loves {{ ml['to'] }}: {{ ml['score']|round(2) }} points</li>
+	{% endfor %}
+</ol>
+
+	
 </body>
 </html>
