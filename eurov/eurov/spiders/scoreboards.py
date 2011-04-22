@@ -61,7 +61,7 @@ class ScoreboardsSpider(CrawlSpider):
             if m:
                 s['country_from'] = m.group(2)
                 s['country_to'] = m.group(3)
-                s['score'] = m.group(1)
+                s['score'] = int(m.group(1))
                 
                 scores.append(s)
                 
