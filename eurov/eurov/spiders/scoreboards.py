@@ -43,7 +43,7 @@ class ScoreboardsSpider(CrawlSpider):
             participants.append(
             {
                 'number': country_number,
-                'name': country_name,
+                'country': country_name,
                 'broadcaster': country_broadcaster,
                 'performer': country_performer,
                 'song': country_song,
