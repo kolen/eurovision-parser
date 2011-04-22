@@ -21,10 +21,14 @@ class ScoreboardsSpider(CrawlSpider):
 
         title = hxs.select('//div[@class="grid-column-block content-block is-not-tabbed cb-block cb-EventInfo cb-EventInfo-default"]/h2/text()')[0].extract()
         
-        props = hxs.select("//table[@class='details']//td/text()").extract()
-
-        participants_data = {}
-
+        evtitle_m = re.match(r'^Eurovision Song Contest (\d{4})(.*)$', title)
+        
+        i = EurovItem()
+        i['title'] = title
+        i['year'] = evtitle_m.group(1)
+        i['stage'] = evtitle_m.group(2)        
+        
+        participants = []
         p_rows = hxs.select("//table[@class='sortable participants no-arrow decorated']/tbody/tr")
         for p_row in p_rows:
             cols = p_row.select(".//td")
@@ -36,7 +40,8 @@ class ScoreboardsSpider(CrawlSpider):
             country_points = int(cols[4].select("text()").extract()[0])
             country_place = int(cols[5].select("text()").extract()[0])
 
-            participants_data[country_name] = {
+            participants.append(
+            {
                 'number': country_number,
                 'name': country_name,
                 'broadcaster': country_broadcaster,
@@ -44,40 +49,34 @@ class ScoreboardsSpider(CrawlSpider):
                 'song': country_song,
                 'points': country_points,
                 'place': country_place,
-            }
+            })
+        
+        i['participants'] = participants
 
         score_strings = hxs.select("//*[contains(@class,'cb-EventInfo-scoreboard')]//tbody/tr/td/@title[contains(.,'goes to')]").extract()
+        scores = []
         for score_string in score_strings:
+            s = {}
             m = re.match("^(\d+)pt from (.+) goes to (.+)$", score_string)
             if m:
-                i = EurovItem()
+                s['country_from'] = m.group(2)
+                s['country_to'] = m.group(3)
+                s['score'] = m.group(1)
                 
-                evtitle_m = re.match(r'^Eurovision Song Contest (\d{4})(.*)$', title)
+                scores.append(s)
                 
-                i['event_title'] = title
-                i['year'] = evtitle_m.group(1)
-                i['stage'] = evtitle_m.group(2)
-                
-                i['country_from'] = m.group(2)
-                i['country_to'] = m.group(3)
-                i['score'] = m.group(1)
-                
-                i['event_country'] = props[0]
-                i['event_host_broadcaster'] = props[1]
-                i['event_venue'] = props[2]
-                i['event_hosts'] = props[3]
-                i['event_num_participants'] = props[4]
-                i['event_voting_method'] = props[5]
-                #i['event_interval_act'] = props[6]
+        i['scores'] = scores
+        
+        
+        details_rows = hxs.select('//table[@class="details"]/tr')
+        details = dict(
+            (row.select('th/text()').extract()[0].strip(),
+            row.select('td/text()').extract()[0].strip())
+            for row in details_rows)
 
-                country_data = participants_data.get(i['country_from'])
-                if country_data:
-                    i['country_from_number'] = country_data['number']
-                    i['country_from_name'] = country_data['name']
-                    i['country_from_broadcaster'] = country_data['broadcaster']
-                    i['country_from_performer'] = country_data['performer']
-                    i['country_from_song'] = country_data['song']
-                    i['country_from_points'] = country_data['points']
-                    i['country_from_place'] = country_data['place']                
+        i['location'] = details.pop('Location', None)
+        i['venue'] = details.pop('Venue', None)
+        
+        i['details'] = details
 
-                yield i
+        return i
