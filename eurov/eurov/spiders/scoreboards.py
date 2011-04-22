@@ -25,7 +25,7 @@ class ScoreboardsSpider(CrawlSpider):
         
         i = EurovItem()
         i['title'] = title
-        i['year'] = evtitle_m.group(1)
+        i['year'] = int(evtitle_m.group(1))
         i['stage'] = evtitle_m.group(2)        
         
         participants = []
