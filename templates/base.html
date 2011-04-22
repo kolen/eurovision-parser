@@ -22,15 +22,6 @@ table, th, td {
 <body>
     <h1>Stats</h1>
 	
-	<h2>Countries</h2>
-	<ul>
-	{% for country, years in countries|dictsort %}
-		<li><b>{{ country }}</b>:
-		{% for year in years|sort %}<span class="year">{{ year }}</span>, {% endfor %}
-		</li>
-	{% endfor %}
-	</ul>
-    
 	<h2>Average points</h2>
 	<table>
 		<thead>

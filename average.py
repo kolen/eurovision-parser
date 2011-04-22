@@ -5,59 +5,54 @@ from jinja2 import Environment, FileSystemLoader
 
 data = json.load(open(sys.argv[1]))
 
-countries = {} #mapping from countries to event title sets
+countries = {} #mapping from countries that voted to event title sets where 
+               #voted
+countries_all = set()
 rates = {} # (from, to) => [ (score, num_participants) ]
-participants = {} # year_and_stage => set(countries)
 average = {} # (from, to) => average
 
 def replace_country(country):
+    country = country.replace("&amp;", "&")
     if country == "Serbia & Montenegro":
         return "Serbia"
     else:
         return country
 
-for row in data:
-    row['country_from'] = replace_country(row['country_from'])
-    row['country_to'] = replace_country(row['country_to'])
+for evt in data:
+    year_and_stage = ("%s %s" % (evt['year'], evt['stage'].strip())).strip()
 
-for row in data:
-    year_and_stage = ("%s %s" % (row['year'], row['stage'].strip())).strip()
+    countries_voted_from = set()
+    for score in evt['scores']:
+        country_from = replace_country(score['country_from'])
+        country_to = replace_country(score['country_to'])
+        countries_voted_from.add(country_from)
 
-    if year_and_stage not in participants:
-        participants[year_and_stage] = set()
+        if (country_from, country_to) not in rates:
+            rates[(country_from, country_to)] = []
 
-    participants[year_and_stage].add(row['country_from'])
+        rates[(country_from, country_to)].append((int(score['score']), 
+            len(evt['participants'])))
 
-for row in data:
-    country_from = row['country_from']
-    country_to = row['country_to']
-    
-    year_and_stage = ("%s %s" % (row['year'], row['stage'].strip())).strip()
-    
-    if country_from not in countries:
-        countries[country_from] = set()
+    for c in countries_voted_from:
+        # Mark all participants x voted from
+        for participant in evt['participants']:
+            c2 = replace_country(participant['country'])
+            if (c, c2) not in rates:
+                rates[(c, c2)] = []
 
-    countries[country_from].add(year_and_stage)
-    
-    if (country_from, country_to) not in rates:
-        rates[(country_from, country_to)] = []
-
-    rates[(country_from, country_to)].append((int(row['score']), 
-        len(participants[year_and_stage])))
+        if c not in countries:
+            countries[c] = set()
+        countries[c].add(year_and_stage)
+        countries_all.add(c)
 
 for (c_from, c_to), entries in rates.iteritems():
     sum = 0
     for score, num_participants in entries:
         sum += score * num_participants
-    avg = float(sum) / len(entries) 
-    average[(c_from, c_to)] = avg 
+    avg = float(sum) / len(countries[c_from]) 
+    average[(c_from, c_to)] = avg
 
-for cs in participants.itervalues():
-    for c_from, c_to in itertools.permutations(cs, 2):
-        if (c_from, c_to) not in average:
-            average[(c_from, c_to)] = 0.0 
-
-countries_list = countries.keys()
+countries_list = list(countries_all)
 countries_list.sort()
 
 most_loved = [
@@ -77,7 +72,6 @@ fout = open("out.html", 'w')
 fout.write(template.render(
     countries=countries,
     rates=rates,
-    participants=participants,
     average=average,
     countries_list=countries_list,
     most_loved=most_loved,
