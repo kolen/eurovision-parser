@@ -37,6 +37,7 @@ for evt in data:
         # Mark all participants x voted from
         for participant in evt['participants']:
             c2 = replace_country(participant['country'])
+            if c == c2: continue
             if (c, c2) not in rates:
                 rates[(c, c2)] = []
 
