@@ -19,7 +19,7 @@ class ScoreboardsSpider(CrawlSpider):
     def parse_page(self, response):
         hxs = HtmlXPathSelector(response)
 
-        title = hxs.select('//div[@class="grid-column-block content-block is-not-tabbed cb-block cb-EventInfo cb-EventInfo-default"]/h2/text()')[0].extract()
+        title = hxs.select('//div[@class="grid-column-block content-block is-not-half is-not-tabbed cb-block cb-EventInfo cb-EventInfo-default"]/h2/text()')[0].extract()
         
         evtitle_m = re.match(r'^Eurovision Song Contest (\d{4})(.*)$', title)
         
